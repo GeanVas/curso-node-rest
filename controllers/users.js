@@ -8,17 +8,10 @@ const usersGet = (req, res = response) => {
     });
 }
 
-const usersPost = async (req, res) => {
+const usersPost = async (req, res = response) => {
 
     const {name, mail, password, role} = req.body;
     const user = new User({name, mail, password, role});
-
-    const emailExist = await User.findOne({correo});
-    if(emailExist) {
-        return res.status(400).json({
-            msg: 'Email already in use'
-        });
-    }
 
     const salt = bcrypt.genSaltSync();
     user.password = bcrypt.hashSync(password, salt);
@@ -30,19 +23,31 @@ const usersPost = async (req, res) => {
     });
 }
 
-const usersPut = (req, res) => {
+const usersPut = async (req, res = response) => {
+
+    const {id} = req.params;
+    const { password, google, ...resto } = req.body;
+
+    if( password ) {
+        const salt = bcrypt.genSaltSync();
+        resto.password = bcrypt.hashSync(password, salt);
+    }
+
+    const user = await User.findByIdAndUpdate(id, resto) ;
+
     res.json({
-        msg: "put API controller"
+        msg: "put API controller",
+        user
     });
 }
 
-const usersPatch = (req, res) => {
+const usersPatch = (req, res = response) => {
     res.json({
         msg: "patch API controller"
     });
 }
 
-const usersDelete = (req, res) => {
+const usersDelete = (req, res = response) => {
     res.json({
         msg: "delete API controller"
     });
