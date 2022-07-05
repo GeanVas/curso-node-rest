@@ -2,9 +2,21 @@ const {response} = require('express');
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 
-const usersGet = (req, res = response) => {
+const usersGet = async (req, res = response) => {
+
+    const {limit = 5, from = 0} = req.query;
+    const query = {state: true};
+
+    const [total, users] = await Promise.all([
+        User.countDocuments({query}),
+        User.find({query})
+            .skip(Number(from))
+            .limit(Number(limit))
+    ])
+
     res.json({
-        msg: "get API controller"
+        total,
+        users
     });
 }
 
@@ -26,7 +38,7 @@ const usersPost = async (req, res = response) => {
 const usersPut = async (req, res = response) => {
 
     const {id} = req.params;
-    const { password, google, ...resto } = req.body;
+    const { _id, password, google, mail, ...resto } = req.body;
 
     if( password ) {
         const salt = bcrypt.genSaltSync();
@@ -35,10 +47,7 @@ const usersPut = async (req, res = response) => {
 
     const user = await User.findByIdAndUpdate(id, resto) ;
 
-    res.json({
-        msg: "put API controller",
-        user
-    });
+    res.json(user);
 }
 
 const usersPatch = (req, res = response) => {
@@ -47,10 +56,13 @@ const usersPatch = (req, res = response) => {
     });
 }
 
-const usersDelete = (req, res = response) => {
-    res.json({
-        msg: "delete API controller"
-    });
+const usersDelete = async (req, res = response) => {
+
+    const {id} = req.params;
+
+    const user = await User.findByIdAndUpdate(id, {state: false});
+
+    res.json(user);
 }
 
 module.exports = {
